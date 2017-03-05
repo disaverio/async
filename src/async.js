@@ -43,6 +43,7 @@
         var innerDeferred = new Deferred(f, type);
         promise.successorDeferred.push(innerDeferred);
         innerDeferred.exec(promise.status, promise.value);
+
         return innerDeferred.promise;
     }
 
@@ -54,68 +55,7 @@
         }
     }
 
-    function allThen(promise, result) {
-
-        _setResponse(this.responses, result, this.promisesArray, promise);
-
-        for (var i=0; i<this.promisesArray.length; i++) {
-            if (this.promisesArray[i].status != 1) {
-                return;
-            }
-        }
-
-        this.resolve(this.responses);
-    }
-
-    function allCatch(promise, error) {
-
-        for (var i=0; i<this.promisesArray.length; i++) {
-            if (this.promisesArray[i] != promise && this.promisesArray[i].status == 2) {
-                return;
-            }
-        }
-
-        this.reject(error);
-    }
-
-    function anyThen(promise, result) {
-
-        for (var i=0; i<this.promisesArray.length; i++) {
-            if (this.promisesArray[i] != promise && this.promisesArray[i].status == 1) {
-                return;
-            }
-        }
-
-        this.resolve(result);
-    }
-
-    function anyCatch(promise, error) {
-
-        _setResponse(this.responses, error, this.promisesArray, promise);
-
-        for (var i=0; i<this.promisesArray.length; i++) {
-            if (this.promisesArray[i] != promise && this.promisesArray[i].status != 2) {
-                return;
-            }
-        }
-
-        this.reject(this.responses);
-    }
-
-    function allSettled(promise, response) {
-
-        _setResponse(this.responses, response, this.promisesArray, promise);
-
-        for (var i=0; i<this.promisesArray.length; i++) {
-            if (this.promisesArray[i].status != 1 && this.promisesArray[i].status != 2) {
-                return;
-            }
-        }
-
-        this.resolve(this.responses);
-    }
-
-    function getThen(type) {
+    function _getThen(type) {
         switch (type) {
             case ALL:
                 return allThen;
@@ -126,7 +66,7 @@
         }
     }
 
-    function getCatch(type) {
+    function _getCatch(type) {
         switch (type) {
             case ALL:
                 return allCatch;
@@ -135,6 +75,57 @@
             case ALL_SETTLED:
                 return allSettled;
         }
+    }
+
+    function allThen(promise, result) {
+        _setResponse(this.responses, result, this.promisesArray, promise);
+
+        for (var i=0; i<this.promisesArray.length; i++) {
+            if (this.promisesArray[i].status != 1) {
+                return;
+            }
+        }
+        this.resolve(this.responses);
+    }
+
+    function allCatch(promise, error) {
+        for (var i=0; i<this.promisesArray.length; i++) {
+            if (this.promisesArray[i] != promise && this.promisesArray[i].status == 2) {
+                return;
+            }
+        }
+        this.reject(error);
+    }
+
+    function anyThen(promise, result) {
+        for (var i=0; i<this.promisesArray.length; i++) {
+            if (this.promisesArray[i] != promise && this.promisesArray[i].status == 1) {
+                return;
+            }
+        }
+        this.resolve(result);
+    }
+
+    function anyCatch(promise, error) {
+        _setResponse(this.responses, error, this.promisesArray, promise);
+
+        for (var i=0; i<this.promisesArray.length; i++) {
+            if (this.promisesArray[i] != promise && this.promisesArray[i].status != 2) {
+                return;
+            }
+        }
+        this.reject(this.responses);
+    }
+
+    function allSettled(promise, response) {
+        _setResponse(this.responses, response, this.promisesArray, promise);
+
+        for (var i=0; i<this.promisesArray.length; i++) {
+            if (this.promisesArray[i].status != 1 && this.promisesArray[i].status != 2) {
+                return;
+            }
+        }
+        this.resolve(this.responses);
     }
 
 
@@ -187,6 +178,7 @@
     Deferred.prototype.resolve = function (result) {
         this.promise.status = 1;
         this.promise.value = result;
+
         for (var i=0; i<this.promise.successorDeferred.length; i++) {
             this.promise.successorDeferred[i].exec(this.promise.status, result);
         }
@@ -195,6 +187,7 @@
     Deferred.prototype.reject = function (error) {
         this.promise.status = 2;
         this.promise.value = error;
+        
         for (var i=0; i<this.promise.successorDeferred.length; i++) {
             this.promise.successorDeferred[i].exec(this.promise.status, error);
         }
@@ -220,8 +213,8 @@
 
         promisesArray.forEach((function(promise) {
             promise
-                .then((getThen(type)).bind(this, promise))
-                .catch((getCatch(type)).bind(this, promise));
+                .then((_getThen(type)).bind(this, promise))
+                .catch((_getCatch(type)).bind(this, promise));
         }).bind(this));
     }
 
