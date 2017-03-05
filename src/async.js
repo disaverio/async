@@ -30,13 +30,13 @@
                                                                    global.async = factory();
 })(this, function(undefined) {
 
-    var THEN = Math.random();
-    var CATCH = Math.random();
-    var FINALLY = Math.random();
+    var THEN = 1;
+    var CATCH = 2;
+    var FINALLY = 3;
     
-    var ALL = Math.random();
-    var ANY = Math.random();
-    var ALL_SETTLED = Math.random();
+    var ALL = 4;
+    var ANY = 5;
+    var ALL_SETTLED = 6;
 
 
     function _setSuccessor(type, f, promise) {
